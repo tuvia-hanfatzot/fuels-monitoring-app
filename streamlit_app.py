@@ -43,13 +43,6 @@ if file1 and file2:
             added_rows = df2[df2['comparison_key'].isin(added_keys)]
             removed_rows = df1[df1['comparison_key'].isin(removed_keys)]
 
-            # Display previews of the dataframes
-            st.subheader("Preview of First File (Older - Sheet: Distribution)")
-            st.dataframe(df1)
-
-            st.subheader("Preview of Second File (Newer - Sheet: Distribution)")
-            st.dataframe(df2)
-
             # Display added and removed rows
             st.subheader("Rows Added in Newer File")
             st.dataframe(added_rows)
