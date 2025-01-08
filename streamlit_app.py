@@ -7,8 +7,8 @@ st.title("Excel Table Comparison Tool")
 
 # Upload files
 st.sidebar.header("Upload Your Files")
-file1 = st.sidebar.file_uploader("Upload First Excel File", type=["xlsx"])
-file2 = st.sidebar.file_uploader("Upload Second Excel File", type=["xlsx"])
+file1 = st.sidebar.file_uploader("Upload First Excel File (Older)", type=["xlsx"])
+file2 = st.sidebar.file_uploader("Upload Second Excel File (Newer)", type=["xlsx"])
 
 if file1 and file2:
     try:
@@ -36,36 +36,60 @@ if file1 and file2:
             set1 = set(df1['comparison_key'])
             set2 = set(df2['comparison_key'])
 
-            # Identify new rows in df2 that are not in df1
-            new_keys = set2 - set1
-            new_rows = df2[df2['comparison_key'].isin(new_keys)]
+            # Identify added and removed rows
+            added_keys = set2 - set1
+            removed_keys = set1 - set2
+
+            added_rows = df2[df2['comparison_key'].isin(added_keys)]
+            removed_rows = df1[df1['comparison_key'].isin(removed_keys)]
 
             # Display previews of the dataframes
-            st.subheader("Preview of First File (Sheet: Distribution)")
+            st.subheader("Preview of First File (Older - Sheet: Distribution)")
             st.dataframe(df1)
 
-            st.subheader("Preview of Second File (Sheet: Distribution)")
+            st.subheader("Preview of Second File (Newer - Sheet: Distribution)")
             st.dataframe(df2)
 
-            # Display the new rows
-            st.subheader("New Rows Found")
-            if not new_rows.empty:
-                st.dataframe(new_rows)
+            # Display added rows
+            st.subheader("Rows Added in Newer File")
+            if not added_rows.empty:
+                st.dataframe(added_rows)
 
-                # Allow users to download the results
-                output = BytesIO()
-                with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                    new_rows.drop(columns=['comparison_key'], inplace=False).to_excel(writer, index=False, sheet_name="New Rows")
-                processed_data = output.getvalue()
+                # Allow users to download added rows
+                output_added = BytesIO()
+                with pd.ExcelWriter(output_added, engine="openpyxl") as writer:
+                    added_rows.drop(columns=['comparison_key'], inplace=False).to_excel(writer, index=False, sheet_name="Added Rows")
+                added_data = output_added.getvalue()
 
                 st.download_button(
-                    label="Download New Rows as Excel",
-                    data=processed_data,
-                    file_name="new_rows.xlsx",
+                    label="Download Added Rows as Excel",
+                    data=added_data,
+                    file_name="added_rows.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
             else:
-                st.info("No new rows were found.")
+                st.info("No rows were added in the newer file.")
+
+            # Display removed rows
+            st.subheader("Rows Removed in Newer File")
+            if not removed_rows.empty:
+                st.dataframe(removed_rows)
+
+                # Allow users to download removed rows
+                output_removed = BytesIO()
+                with pd.ExcelWriter(output_removed, engine="openpyxl") as writer:
+                    removed_rows.drop(columns=['comparison_key'], inplace=False).to_excel(writer, index=False, sheet_name="Removed Rows")
+                removed_data = output_removed.getvalue()
+
+                st.download_button(
+                    label="Download Removed Rows as Excel",
+                    data=removed_data,
+                    file_name="removed_rows.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+            else:
+                st.info("No rows were removed in the newer file.")
+
         else:
             st.error("The columns 'Description' and 'Agency' must exist in both files. Please check your Excel files.")
     except Exception as e:
