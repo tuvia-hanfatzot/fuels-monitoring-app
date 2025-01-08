@@ -50,46 +50,27 @@ if file1 and file2:
             st.subheader("Preview of Second File (Newer - Sheet: Distribution)")
             st.dataframe(df2)
 
-            # Display added rows
+            # Display added and removed rows
             st.subheader("Rows Added in Newer File")
-            if not added_rows.empty:
-                st.dataframe(added_rows)
+            st.dataframe(added_rows)
 
-                # Allow users to download added rows
-                output_added = BytesIO()
-                with pd.ExcelWriter(output_added, engine="openpyxl") as writer:
-                    added_rows.drop(columns=['comparison_key'], inplace=False).to_excel(writer, index=False, sheet_name="Added Rows")
-                added_data = output_added.getvalue()
-
-                st.download_button(
-                    label="Download Added Rows as Excel",
-                    data=added_data,
-                    file_name="added_rows.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-            else:
-                st.info("No rows were added in the newer file.")
-
-            # Display removed rows
             st.subheader("Rows Removed in Newer File")
-            if not removed_rows.empty:
-                st.dataframe(removed_rows)
+            st.dataframe(removed_rows)
 
-                # Allow users to download removed rows
-                output_removed = BytesIO()
-                with pd.ExcelWriter(output_removed, engine="openpyxl") as writer:
-                    removed_rows.drop(columns=['comparison_key'], inplace=False).to_excel(writer, index=False, sheet_name="Removed Rows")
-                removed_data = output_removed.getvalue()
+            # Combine results into a single Excel file with two sheets
+            output_combined = BytesIO()
+            with pd.ExcelWriter(output_combined, engine="openpyxl") as writer:
+                added_rows.drop(columns=['comparison_key'], inplace=False).to_excel(writer, index=False, sheet_name="Added Rows")
+                removed_rows.drop(columns=['comparison_key'], inplace=False).to_excel(writer, index=False, sheet_name="Removed Rows")
+            combined_data = output_combined.getvalue()
 
-                st.download_button(
-                    label="Download Removed Rows as Excel",
-                    data=removed_data,
-                    file_name="removed_rows.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-            else:
-                st.info("No rows were removed in the newer file.")
-
+            # Allow users to download the combined Excel file
+            st.download_button(
+                label="Download Combined Results as Excel",
+                data=combined_data,
+                file_name="comparison_results.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
         else:
             st.error("The columns 'Description' and 'Agency' must exist in both files. Please check your Excel files.")
     except Exception as e:
