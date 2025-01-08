@@ -44,10 +44,10 @@ if file1 and file2:
             removed_rows = df1[df1['comparison_key'].isin(removed_keys)]
 
             # Display added and removed rows
-            st.subheader("Rows Added in Newer File")
+            st.subheader("Rows Added to Newer File")
             st.dataframe(added_rows)
 
-            st.subheader("Rows Removed in Newer File")
+            st.subheader("Rows Removed from Older File")
             st.dataframe(removed_rows)
 
             # Combine results into a single Excel file with two sheets
