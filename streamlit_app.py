@@ -10,11 +10,18 @@ st.sidebar.header("Upload Your Files")
 file1 = st.sidebar.file_uploader("Upload First Excel File (Older)", type=["xlsx"])
 file2 = st.sidebar.file_uploader("Upload Second Excel File (Newer)", type=["xlsx"])
 
+def read_sheet(file, primary_sheet, fallback_sheet, header=2):
+    """Attempts to read the primary sheet; if not found, falls back to the secondary sheet."""
+    try:
+        return pd.read_excel(file, sheet_name=primary_sheet, header=header).fillna('')
+    except ValueError:
+        return pd.read_excel(file, sheet_name=fallback_sheet, header=header).fillna('')
+
 if file1 and file2:
     try:
-        # Read the specific sheet and skip rows above the actual table
-        df1 = pd.read_excel(file1, sheet_name='Distribution', header=2).fillna('')  # Fill NA values with an empty string
-        df2 = pd.read_excel(file2, sheet_name='Distribution', header=2).fillna('')  # Fill NA values with an empty string
+        # Read the specific sheet or fallback sheet
+        df1 = read_sheet(file1, 'Distribution', 'UNOPS Total Distribution')
+        df2 = read_sheet(file2, 'Distribution', 'UNOPS Total Distribution')
 
         # Ignore the last 2 rows in each table
         df1 = df1.iloc[:-2]
