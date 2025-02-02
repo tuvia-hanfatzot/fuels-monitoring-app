@@ -10,18 +10,21 @@ st.sidebar.header("Upload Your Files")
 file1 = st.sidebar.file_uploader("Upload First Excel File (Older)", type=["xlsx"])
 file2 = st.sidebar.file_uploader("Upload Second Excel File (Newer)", type=["xlsx"])
 
-def read_sheet(file, primary_sheet, fallback_sheet, header=2):
-    """Attempts to read the primary sheet; if not found, falls back to the secondary sheet."""
-    try:
-        return pd.read_excel(file, sheet_name=primary_sheet, header=header).fillna('')
-    except ValueError:
-        return pd.read_excel(file, sheet_name=fallback_sheet, header=header).fillna('')
+def get_valid_sheet(file, primary_sheet, fallback_sheet, header=2):
+    """Checks available sheets and selects the first valid one."""
+    xls = pd.ExcelFile(file)
+    available_sheets = xls.sheet_names
+    selected_sheet = primary_sheet if primary_sheet in available_sheets else fallback_sheet if fallback_sheet in available_sheets else None
+    if selected_sheet:
+        return pd.read_excel(xls, sheet_name=selected_sheet, header=header).fillna('')
+    else:
+        raise ValueError(f"Neither '{primary_sheet}' nor '{fallback_sheet}' found in the uploaded file.")
 
 if file1 and file2:
     try:
         # Read the specific sheet or fallback sheet
-        df1 = read_sheet(file1, 'Distribution', 'UNOPS Total Distribution')
-        df2 = read_sheet(file2, 'Distribution', 'UNOPS Total Distribution')
+        df1 = get_valid_sheet(file1, 'Distribution', 'UNOPS Total Distribution')
+        df2 = get_valid_sheet(file2, 'Distribution', 'UNOPS Total Distribution')
 
         # Ignore the last 2 rows in each table
         df1 = df1.iloc[:-2]
