@@ -13,12 +13,22 @@ file2 = st.sidebar.file_uploader("Upload Second Excel File (Newer)", type=["xlsx
 def get_valid_sheet(file, primary_sheet, fallback_sheet, header=2):
     """Checks available sheets and selects the first valid one."""
     xls = pd.ExcelFile(file)
-    available_sheets = xls.sheet_names
-    selected_sheet = primary_sheet if primary_sheet in available_sheets else fallback_sheet if fallback_sheet in available_sheets else None
+    available_sheets = [sheet.strip().lower() for sheet in xls.sheet_names]  # Trim and lowercase
+
+    # Normalize sheet names for comparison
+    primary_sheet = primary_sheet.strip().lower()
+    fallback_sheet = fallback_sheet.strip().lower()
+
+    selected_sheet = None
+    if primary_sheet in available_sheets:
+        selected_sheet = xls.sheet_names[available_sheets.index(primary_sheet)]
+    elif fallback_sheet in available_sheets:
+        selected_sheet = xls.sheet_names[available_sheets.index(fallback_sheet)]
+    
     if selected_sheet:
         return pd.read_excel(xls, sheet_name=selected_sheet, header=header).fillna('')
     else:
-        raise ValueError(f"Neither '{primary_sheet}' nor '{fallback_sheet}' found in the uploaded file.")
+        raise ValueError(f"Neither '{primary_sheet}' nor '{fallback_sheet}' found in the uploaded file. Please check the exact sheet names.")
 
 if file1 and file2:
     try:
